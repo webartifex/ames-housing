@@ -2,8 +2,8 @@
 
 This module uses the information available on the publication homepage and
 defines a nested dictionary `ALL_COLUMNS` that can be used to decode the data
-in the accompanying AmesHousing.xls file in the data folder. For convenience,
-`ALL_VARIABLES` provides a list of only the column names.
+in the accompanying Excel file. For convenience, `ALL_VARIABLES` provides a
+list of only the column names.
 
 Furthermore, six helper dictionaries `CONTINUOUS_COLUMNS`, `DISCRETE_COLUMNS`,
 `NUMERIC_COLUMNS`, `NOMINAL_COLUMNS`, `ORDINAL_COLUMNS`, and `LABEL_COLUMNS`
@@ -14,8 +14,8 @@ ordinal columns. For each of the six dictionaries, a list of the actual column
 names is created with the same name and the suffix "_VARIABLES" instead of
 "_COLUMNS", e.g., "CONTINUOUS_VARIABLES" instead of "CONTINUOUS_COLUMNS".
 
-Lastly, the LABEL_TYPES list can be used to quickly check types in a readable
-way.
+Lastly, the INDEX_COLUMNS and LABEL_TYPES list can be used to refer to the
+actual values in a more readable way.
 
 Source:
     https://www.amstat.org/publications/jse/v19n3/decock/DataDocumentation.txt
@@ -31,6 +31,7 @@ import re
 import requests
 
 
+INDEX_COLUMNS = ["Order", "PID"]
 LABEL_TYPES = ["nominal", "ordinal"]
 # Note that these dictionaries and lists are not actually constants but
 # filled in during import time which makes them "near"-constant.
@@ -98,7 +99,7 @@ def _extract_meta_data(lines):
     # The two ID columns and the target variable "SalePrice"
     # are not put into the helper dicts / lists as they are
     # treated seperately in the modelling anyways.
-    non_feature_columns = ["Order", "PID", "SalePrice"]
+    non_feature_columns = INDEX_COLUMNS + ["SalePrice"]
 
     for line in lines:
         # Process the next variable in the list.
