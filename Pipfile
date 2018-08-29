@@ -12,6 +12,8 @@ xlrd = "*"
 xlwt = "*"
 tabulate = "*"
 requests = "*"
+seaborn = "*"
+missingno = "*"
 
 [dev-packages]
 black = "*"
