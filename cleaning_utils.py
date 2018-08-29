@@ -108,9 +108,7 @@ def _extract_meta_data(lines):
             # Skip the non-feature columns (that are always non-label columns).
             if name in non_feature_columns:
                 continue
-            # name = name.strip()
             type_ = type_.lower()
-            # description = description.strip()
             # Create an entry for the next variable in the list.
             ALL_COLUMNS[name] = {"type": type_, "description": description}
             # Only if the variable is a label type, a lookup table is needed.
@@ -118,7 +116,7 @@ def _extract_meta_data(lines):
                 ALL_COLUMNS[name].update({"lookups": {}})
             # Ordinal variables also store the order of their realizations
             # exactly as defined in the data description file.
-            if type_ == 'ordinal':
+            if type_ == "ordinal":
                 ALL_COLUMNS[name].update({"order": []})
         # Add label realizations to a previously found label variable.
         elif type_ in LABEL_TYPES:
@@ -126,7 +124,7 @@ def _extract_meta_data(lines):
             code, description = match.groups()
             code = code.strip()
             ALL_COLUMNS[name]["lookups"][code] = description
-            if type_ == 'ordinal':
+            if type_ == "ordinal":
                 ALL_COLUMNS[name]["order"].append(code)
 
 
@@ -235,6 +233,20 @@ def correct_column_names(data_columns):
                 if data_column == adj_desc_column:
                     _rename_column(desc_column, data_column)
                     break
+    # Propagate the change to all "secondary" dictionaries and lists.
+    _populate_dicts_and_lists()
+
+
+def update_column_descriptions(columns_to_be_kept):
+    """Remove discarded columns for all the module's exported data structures.
+
+    After dropping some columns from the DataFrame, these removals must be
+    propagated to the helper data structures defined in this module.
+    """
+    global ALL_COLUMNS
+    columns_to_be_removed = list(set(ALL_COLUMNS) - set(columns_to_be_kept))
+    for column in columns_to_be_removed:
+        del ALL_COLUMNS[column]
     # Propagate the change to all "secondary" dictionaries and lists.
     _populate_dicts_and_lists()
 
