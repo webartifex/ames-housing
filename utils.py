@@ -24,11 +24,12 @@ Implementation Note:
     This file defines the "constants" it exports dynamically. This is a bit
     advanced but intentional!
 """
-# pragma pylint:disable=W0603
+# pragma pylint:disable=global-statement
 
 import re
 
 import requests
+import tabulate
 
 
 INDEX_COLUMNS = ["Order", "PID"]
@@ -204,7 +205,7 @@ def _rename_column(old_name, new_name):
     del ALL_COLUMNS[old_name]
 
 
-def correct_column_names(data_columns):
+def correct_column_names(data_columns, *, repopulate=True):
     """Cross-check the column names between data and description file.
 
     In rare cases, the variable name in the data description file was slightly
@@ -235,21 +236,38 @@ def correct_column_names(data_columns):
                     _rename_column(desc_column, data_column)
                     break
     # Propagate the change to all "secondary" dictionaries and lists.
-    _populate_dicts_and_lists()
+    if repopulate:
+        _populate_dicts_and_lists()
 
 
-def update_column_descriptions(columns_to_be_kept):
+def update_column_descriptions(columns_to_be_kept, *, correct_columns=False):
     """Remove discarded columns for all the module's exported data structures.
 
     After dropping some columns from the DataFrame, these removals must be
     propagated to the helper data structures defined in this module.
     """
     global ALL_COLUMNS
+    if correct_columns:
+        correct_column_names(columns_to_be_kept, repopulate=False)
     columns_to_be_removed = list(set(ALL_COLUMNS) - set(columns_to_be_kept))
     for column in columns_to_be_removed:
         del ALL_COLUMNS[column]
     # Propagate the change to all "secondary" dictionaries and lists.
     _populate_dicts_and_lists()
+
+
+def print_column_list(subset=None):
+    """Print (a subset of) the data's column headers.
+
+    Note that this function is built to handle both *_COLUMNS dicts and
+    *_VARIABLES lists.
+    """
+    if subset is None:
+        subset = ALL_VARIABLES
+    else:
+        assert set(list(subset)) <= set(list(ALL_VARIABLES))
+    columns = sorted((c, ALL_COLUMNS[c]["description"]) for c in subset)
+    print(tabulate.tabulate(columns, tablefmt="plain"))
 
 
 # This code is executed once during import time and
