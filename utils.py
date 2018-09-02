@@ -28,12 +28,14 @@ Implementation Note:
 
 import re
 
+import pandas as pd
 import requests
 import tabulate
 
 
 INDEX_COLUMNS = ["Order", "PID"]
 LABEL_TYPES = ["nominal", "ordinal"]
+TARGET_VARIABLE = ["SalePrice"]
 # Note that these dictionaries and lists are not actually constants but
 # filled in during import time which makes them "near"-constant.
 ALL_COLUMNS = {}
@@ -100,7 +102,7 @@ def _extract_meta_data(lines):
     # The two ID columns and the target variable "SalePrice"
     # are not put into the helper dicts / lists as they are
     # treated seperately in the modelling anyways.
-    non_feature_columns = INDEX_COLUMNS + ["SalePrice"]
+    non_feature_columns = INDEX_COLUMNS + TARGET_VARIABLE
 
     for line in lines:
         # Process the next variable in the list.
