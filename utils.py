@@ -213,33 +213,40 @@ def correct_column_names(data_columns, *, repopulate=True):
     In rare cases, the variable name in the data description file was slightly
     changed, i.e., a dash or a space needs to be removed.
 
-    This function adjusts the keys in all the dictionaries and lists.
+    This function adjusts the keys in all the dictionaries and lists and
+    returns a dictionary summarizing the name changes.
     """
+    renamed = {}
     for desc_column in ALL_VARIABLES:
         if desc_column not in data_columns:
             for data_column in data_columns:
                 # Column name was truncated in description file.
                 if data_column.startswith(desc_column):
                     _rename_column(desc_column, data_column)
+                    renamed[desc_column] = data_column
                     break
                 # Spaces between words in Excel were removed.
                 adj_data_column = data_column.replace(" ", "")
                 if adj_data_column == desc_column:
                     _rename_column(desc_column, data_column)
+                    renamed[desc_column] = data_column
                     break
                 # Spaces between words in description file were removed.
                 adj_desc_column = desc_column.replace(" ", "")
                 if adj_data_column == adj_desc_column:
                     _rename_column(desc_column, data_column)
+                    renamed[desc_column] = data_column
                     break
                 # Dashes in description file were removed.
                 adj_desc_column = desc_column.replace("-", "")
                 if data_column == adj_desc_column:
                     _rename_column(desc_column, data_column)
+                    renamed[desc_column] = data_column
                     break
     # Propagate the change to all "secondary" dictionaries and lists.
     if repopulate:
         _populate_dicts_and_lists()
+    return renamed
 
 
 def update_column_descriptions(columns_to_be_kept, *, correct_columns=False):
@@ -247,15 +254,20 @@ def update_column_descriptions(columns_to_be_kept, *, correct_columns=False):
 
     After dropping some columns from the DataFrame, these removals must be
     propagated to the helper data structures defined in this module.
+
+    Returns a dictionary of all the columns with changed names.
     """
     global ALL_COLUMNS
     if correct_columns:
-        correct_column_names(columns_to_be_kept, repopulate=False)
+        renamed = correct_column_names(columns_to_be_kept, repopulate=False)
+    else:
+        renamed = {}
     columns_to_be_removed = list(set(ALL_COLUMNS) - set(columns_to_be_kept))
     for column in columns_to_be_removed:
         del ALL_COLUMNS[column]
     # Propagate the change to all "secondary" dictionaries and lists.
     _populate_dicts_and_lists()
+    return renamed
 
 
 def print_column_list(subset=None):
@@ -270,6 +282,86 @@ def print_column_list(subset=None):
         assert set(list(subset)) <= set(list(ALL_VARIABLES))
     columns = sorted((c, ALL_COLUMNS[c]["description"]) for c in subset)
     print(tabulate.tabulate(columns, tablefmt="plain"))
+
+
+def load_clean_data(subset=None, ordinal_encoded=False):
+    """Return the clean project data as a pandas DataFrame.
+
+    This utility function ensures that each column is cast to its correct type.
+
+    It takes as an optional 'subset' argument a list of columns and
+    'ordinal_encoded' can be set to True to obtain the ordinal columns already
+    encoded into ordered integers.
+
+    The target variable "SalePrice" is always included as the last column.
+
+    Implementation Notes:
+
+    One caveat is that all columns need to be casted as generic object type
+    first, then the column names in the global dicts and lists are updated to
+    reflect the slightly different column names (between data and description
+    files), after which only the numeric columns can be casted correctly.
+
+    Another difficulty is that some values, e.g., "NA" strings are cast as
+    np.NaN / None by pandas although they represent actual label values.
+
+    As column names come in slightly different form compared to the data
+    description file, the subsetting can only be done after loading the CSV
+    and some work needs to be put in to figure out if a column mentioned in the
+    subset was renamed.
+    """
+    # pragma pylint:disable=invalid-name
+    df = pd.read_csv(
+        "data_clean.csv",
+        index_col=INDEX_COLUMNS,
+        dtype=object,
+        na_values="",  # There are no missing values in the clean data file.
+        keep_default_na=False,  # "NA" strings are casted as actual values.
+    )
+    # Remove columns that are in the description but not in the data file.
+    renamed = update_column_descriptions(df.columns, correct_columns=True)
+    # Cast the numeric types correctly.
+    for column in CONTINUOUS_VARIABLES + TARGET_VARIABLE:
+        df[column] = df[column].astype(float)
+    for column in DISCRETE_VARIABLES:
+        df[column] = df[column].astype(int)
+    # Cast the label types as Categoricals.
+    for column, mapping in NOMINAL_COLUMNS.items():
+        labels = pd.api.types.CategoricalDtype(
+            mapping["lookups"].keys(), ordered=False
+        )
+        df[column] = df[column].astype(labels)
+    for column, mapping in ORDINAL_COLUMNS.items():
+        labels = pd.api.types.CategoricalDtype(
+            reversed(mapping["order"]), ordered=True
+        )
+        df[column] = df[column].astype(labels)
+    # Mirror the renaming and dropping of columns
+    # for the provided list of columns.
+    # Note that the target variable goes last.
+    if subset is not None:
+        subset = set(subset)
+        subset.discard("SalePrice")
+        for old_name, new_name in renamed.items():
+            if old_name in subset:
+                subset.remove(old_name)
+                subset.add(new_name)
+        subset = sorted(set(df.columns) & subset)
+        df = df[subset + TARGET_VARIABLE]
+    # Use integer encoding for ordinal variables.
+    if ordinal_encoded:
+        df = encode_ordinals(df)
+    return df
+
+
+def encode_ordinals(df):
+    """Replace ordinal columns' labels with integer codes."""
+    # pragma pylint:disable=invalid-name
+    df = df.copy()
+    for column in df.columns:
+        if column in ORDINAL_VARIABLES:
+            df[column] = df[column].cat.codes
+    return df
 
 
 # This code is executed once during import time and
