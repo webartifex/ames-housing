@@ -58,7 +58,7 @@ def _get_lines():
     """Obtain the non-empty lines of the data description file."""
     # Read cached data file.
     try:
-        with open("data_documentation.txt", "r") as file:
+        with open("data/data_documentation.txt", "r") as file:
             lines = file.readlines()
     # If there is no cached file, obtain in from the original source.
     except FileNotFoundError:
@@ -67,7 +67,7 @@ def _get_lines():
             "/jse/v19n3/decock/DataDocumentation.txt"
         )
         # Cache the retrieved file.
-        with open("data_documentation.txt", "w") as file:
+        with open("data/data_documentation.txt", "w") as file:
             file.write(response.text)
         lines = response.text.split("\r\n")
     # Remove header, footer, and empty lines.
@@ -318,7 +318,7 @@ def load_clean_data(subset=None, ordinal_encoded=False):
     """
     # pragma pylint:disable=invalid-name
     df = pd.read_csv(
-        "data_clean.csv",
+        "data/data_clean.csv",
         index_col=INDEX_COLUMNS,
         dtype=object,
         na_values="",  # There are no missing values in the clean data file.
