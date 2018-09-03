@@ -35,7 +35,7 @@ import tabulate
 
 INDEX_COLUMNS = ["Order", "PID"]
 LABEL_TYPES = ["nominal", "ordinal"]
-TARGET_VARIABLE = ["SalePrice"]
+TARGET_VARIABLES = ["SalePrice"]
 # Note that these dictionaries and lists are not actually constants but
 # filled in during import time which makes them "near"-constant.
 ALL_COLUMNS = {}
@@ -102,7 +102,7 @@ def _extract_meta_data(lines):
     # The two ID columns and the target variable "SalePrice"
     # are not put into the helper dicts / lists as they are
     # treated seperately in the modelling anyways.
-    non_feature_columns = INDEX_COLUMNS + TARGET_VARIABLE
+    non_feature_columns = INDEX_COLUMNS + TARGET_VARIABLES
 
     for line in lines:
         # Process the next variable in the list.
@@ -279,9 +279,15 @@ def print_column_list(subset=None):
     if subset is None:
         subset = ALL_VARIABLES
     else:
-        assert set(list(subset)) <= set(list(ALL_VARIABLES))
-    columns = sorted((c, ALL_COLUMNS[c]["description"]) for c in subset)
-    print(tabulate.tabulate(columns, tablefmt="plain"))
+        subset = set(subset)
+        # Handle variables withoutdescription seperately.
+        without_desc = subset - set(ALL_VARIABLES)
+        subset -= without_desc
+    columns = [(c, ALL_COLUMNS[c]["description"]) for c in subset]
+    if without_desc:
+        for c in sorted(without_desc):
+            columns.append((c, ''))
+    print(tabulate.tabulate(sorted(columns), tablefmt="plain"))
 
 
 def load_clean_data(subset=None, ordinal_encoded=False):
@@ -321,7 +327,7 @@ def load_clean_data(subset=None, ordinal_encoded=False):
     # Remove columns that are in the description but not in the data file.
     renamed = update_column_descriptions(df.columns, correct_columns=True)
     # Cast the numeric types correctly.
-    for column in CONTINUOUS_VARIABLES + TARGET_VARIABLE:
+    for column in CONTINUOUS_VARIABLES + TARGET_VARIABLES:
         df[column] = df[column].astype(float)
     for column in DISCRETE_VARIABLES:
         df[column] = df[column].astype(int)
@@ -347,7 +353,7 @@ def load_clean_data(subset=None, ordinal_encoded=False):
                 subset.remove(old_name)
                 subset.add(new_name)
         subset = sorted(set(df.columns) & subset)
-        df = df[subset + TARGET_VARIABLE]
+        df = df[subset + TARGET_VARIABLES]
     # Use integer encoding for ordinal variables.
     if ordinal_encoded:
         df = encode_ordinals(df)
