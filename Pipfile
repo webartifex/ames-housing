@@ -17,6 +17,7 @@ seaborn = "*"
 missingno = "*"
 sklearn = "*"
 statsmodels = "*"
+tqdm = "*"
 
 [dev-packages]
 black = "*"

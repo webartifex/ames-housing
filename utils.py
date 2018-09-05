@@ -24,10 +24,10 @@ Implementation Note:
     This file defines the "constants" it exports dynamically. This is a bit
     advanced but intentional!
 """
-# pragma pylint:disable=global-statement
 
 import re
 
+import numpy as np
 import pandas as pd
 import requests
 import tabulate
@@ -140,19 +140,6 @@ def _populate_dicts_and_lists():
     dictionaries and lists are considered derived from it and thus considered
     "secondary".
     """
-    global ALL_VARIABLES
-    global CONTINUOUS_COLUMNS
-    global CONTINUOUS_VARIABLES
-    global DISCRETE_COLUMNS
-    global DISCRETE_VARIABLES
-    global NUMERIC_COLUMNS
-    global NUMERIC_VARIABLES
-    global NOMINAL_COLUMNS
-    global NOMINAL_VARIABLES
-    global ORDINAL_COLUMNS
-    global ORDINAL_VARIABLES
-    global LABEL_COLUMNS
-    global LABEL_VARIABLES
     # The global data structures are not re-assigned to so as to keep all
     # references in the Jupyter notebooks alive. Instead, they are emptied
     # and re-filled.
@@ -175,6 +162,11 @@ def _populate_dicts_and_lists():
         }
     )
     DISCRETE_VARIABLES[:] = sorted(DISCRETE_COLUMNS)
+    FACTOR_VARIABLES[:] = [
+        key
+        for (key, value) in ALL_COLUMNS.items()
+        if value["type"] == "factor"
+    ]
     NUMERIC_COLUMNS.clear()
     NUMERIC_COLUMNS.update({**CONTINUOUS_COLUMNS, **DISCRETE_COLUMNS})
     NUMERIC_VARIABLES[:] = sorted(NUMERIC_COLUMNS)
@@ -203,7 +195,6 @@ def _populate_dicts_and_lists():
 
 def _rename_column(old_name, new_name):
     """Change the name of a column."""
-    global ALL_COLUMNS
     ALL_COLUMNS[new_name] = ALL_COLUMNS[old_name]
     del ALL_COLUMNS[old_name]
 
@@ -249,7 +240,6 @@ def update_column_descriptions(columns_to_be_kept, *, correct_columns=False):
     After dropping some columns from the DataFrame, these removals must be
     propagated to the helper data structures defined in this module.
     """
-    global ALL_COLUMNS
     if correct_columns:
         correct_column_names(columns_to_be_kept, repopulate=False)
     columns_to_be_removed = list(set(ALL_COLUMNS) - set(columns_to_be_kept))
@@ -279,17 +269,15 @@ def print_column_list(subset=None):
     print(tabulate.tabulate(sorted(columns), tablefmt="plain"))
 
 
-def load_clean_data(*, path=None, ordinal_encoded=False):
+def load_clean_data(path=None):
     """Return the clean project data as a pandas DataFrame.
 
     This utility function ensures that each column is cast to its correct type.
 
-    It takes the following optional keyword-only arguments:
-    - 'path': path to the clean CSV file (defaults to "data/data_clean.csv")
-    - 'ordinal_encoded': can be set to True to obtain the ordinal columns that
-        are already encoded into ordered integers
+    It takes an optional path argument to a clean CSV file (defaults to
+    "data/data_clean.csv").
 
-    The target variable "SalePrice" is always included as the last column.
+    The target variables are always included as the last columns.
 
     Implementation Notes:
 
@@ -331,22 +319,30 @@ def load_clean_data(*, path=None, ordinal_encoded=False):
     derived_columns = set(df.columns) - set(ALL_VARIABLES + TARGET_VARIABLES)
     if derived_columns:
         for column in derived_columns:
-            # All derived variables are numeric (including factors).
-            df[column] = df[column].astype(float)
             # Check if the derived variable is a target variable.
             for target in TARGET_VARIABLES[:]:
                 if column.startswith(target):
+                    df[column] = df[column].astype(float)
                     TARGET_VARIABLES.append(column)
                     break
             else:
+                df[column] = df[column].astype(float)
+                is_int = (df[column] == df[column].astype(int)).all()
+                n_unique = len(df[column].unique())
+                if is_int & (n_unique == 2):
+                    df[column] = df[column].astype(int)
+                    type_ = "factor"
+                elif is_int & (n_unique < 150):
+                    df[column] = df[column].astype(int)
+                    type_ = "discrete"
+                else:
+                    df[column] = df[column].astype(float)
+                    type_ = "continuous"
                 ALL_COLUMNS[column] = {
-                    "type": "continuous",
+                    "type": type_,
                     "description": "derived variable",
                 }
         _populate_dicts_and_lists()
-    # Use integer encoding for ordinal variables.
-    if ordinal_encoded:
-        df = encode_ordinals(df)
     return df
 
 
@@ -356,8 +352,22 @@ def encode_ordinals(df):
     df = df.copy()
     for column in df.columns:
         if column in ORDINAL_VARIABLES:
-            df[column] = df[column].cat.codes
+            df[column] = df[column].cat.codes.astype(int)
     return df
+
+
+def bias_score(y_true, y_pred):
+    """Determine the bias of a prediction."""
+    assert y_true.shape == y_pred.shape
+    assert y_true.ndim == 1
+    return np.mean(y_pred - y_true)
+
+
+def max_deviation(y_true, y_pred):
+    """Determine the maximum deviation of a prediction."""
+    assert y_true.shape == y_pred.shape
+    assert y_true.ndim == 1
+    return np.max(np.abs(y_pred - y_true))
 
 
 # This code is executed once during import time and
