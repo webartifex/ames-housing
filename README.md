@@ -15,6 +15,9 @@ with by following these links:
 - [Visualizations](https://mybinder.org/v2/gh/webartifex/ames-housing/master?urlpath=lab/tree/03_descriptive_visualizations.ipynb)
 - [Predictions](https://mybinder.org/v2/gh/webartifex/ames-housing/master?urlpath=lab/tree/04_predictive_models.ipynb)
 
+A video presentation of the case study is available on
+[YouTube <img height="12" style="display: inline-block" src="link_to_yt.png">](https://www.youtube.com/watch?v=VSeGseoJsNA).
+
 
 ## Installation
 
