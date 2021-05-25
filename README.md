@@ -18,7 +18,7 @@ with by following these links:
 - *Notebook 0*: [Data Cleaning](https://mybinder.org/v2/gh/webartifex/ames-housing/main?urlpath=lab/tree/00_data_cleaning.ipynb)
 - *Notebook 1*: [Correlations](https://mybinder.org/v2/gh/webartifex/ames-housing/main?urlpath=lab/tree/01_pairwise_correlations.ipynb)
 - *Notebook 2*: [Visualizations](https://mybinder.org/v2/gh/webartifex/ames-housing/main?urlpath=lab/tree/02_descriptive_visualizations.ipynb)
-- *Notebook 4*: [Predictions](https://mybinder.org/v2/gh/webartifex/ames-housing/main?urlpath=lab/tree/04_predictive_models.ipynb)
+- *Notebook 3*: [Predictions](https://mybinder.org/v2/gh/webartifex/ames-housing/main?urlpath=lab/tree/03_predictive_models.ipynb)
 
 
 ### Objective
