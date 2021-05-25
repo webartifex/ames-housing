@@ -1138,7 +1138,7 @@ test = ["pytest", "pytest-cov"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "83a3da345ed6e90e0bcfbd3c253855f591309409e82cf78debbd8a0529129def"
+content-hash = "7b377dc1418248d1864804e5ffc22e8ace3a2002ba88f3e7c9f4d9fa6cff366a"
 
 [metadata.files]
 anyio = [
