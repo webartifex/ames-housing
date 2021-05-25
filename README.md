@@ -6,7 +6,7 @@ the problem of predicting house prices.
 The dataset is publicly available and can be downloaded, for example, at
 [Kaggle](https://www.kaggle.com/c/house-prices-advanced-regression-techniques).
 
-The case study is based on this [research paper](paper.pdf).
+The case study is based on this [research paper](static/paper.pdf).
 
 The analyses are presented in four notebooks that may be interactively worked
 with by following these links:
@@ -16,7 +16,7 @@ with by following these links:
 - [Predictions](https://mybinder.org/v2/gh/webartifex/ames-housing/master?urlpath=lab/tree/04_predictive_models.ipynb)
 
 A video presentation of the case study is available on
-[YouTube <img height="12" style="display: inline-block" src="link_to_yt.png">](https://www.youtube.com/watch?v=VSeGseoJsNA).
+    [YouTube <img height="12" style="display: inline-block" src="static/link/to_yt.png">](https://www.youtube.com/watch?v=VSeGseoJsNA).
 
 
 ## Installation
