@@ -29,20 +29,22 @@ package-mode = false
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
-jupyterlab = "^3.0.16"
-missingno = "^0.4.2"
-matplotlib = "^3.4.2"
-numpy = "^1.20.3"
-pandas = "^1.2.4"
-requests = "^2.25.1"
-scikit-learn = "^0.24.2"
-seaborn = "^0.11.1"
-statsmodels = "^0.12.2"
-tabulate = "^0.8.9"
-tqdm = "^4.61.0"
-xlrd = "^2.0.1"
+python = "^3.9"
+
+jupyterlab = "^4.2"
+
+matplotlib = "^3.9"
+missingno = "^0.5"
+numpy = "^2.0"
+pandas = "^2.2"
+requests = "^2.32"
+scikit-learn = "^1.5"
+seaborn = "^0.13"
+statsmodels = "^0.14"
+tabulate = "^0.9"
+tqdm = "^4.66"
+xlrd = "^2.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^21.5b1"
-pylint = "^2.8.2"
+black = {extras = ["jupyter"], version = "^24.4"}
+pylint = "^3.2"
