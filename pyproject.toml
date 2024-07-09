@@ -47,4 +47,5 @@ xlrd = "^2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["jupyter"], version = "^24.4"}
+invoke = "^2.2"
 pylint = "^3.2"
