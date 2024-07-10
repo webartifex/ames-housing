@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ames-housing"
-version = "0.2.0.dev0"
+version = "0.3.0.dev0"
 
 authors = [
     "Alexander Hess <alexander@webartifex.biz>",
